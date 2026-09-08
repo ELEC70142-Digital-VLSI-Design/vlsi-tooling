@@ -1,0 +1,63 @@
+#!/bin/csh -f
+#############################################################
+#
+#  stil2verilog - translate an ATPG STIL pattern file into a
+#  Verilog testbench, with the libstdc++ it needs.
+#
+#  Author:   Sne Samal
+#  Date:     2026-09-02
+#  Version:  1.0
+#
+#      vlsi-tooling/syn tsmc65LP   load tools + PDK (once per shell)
+#      stil2verilog <patterns>.stil <output basename>
+#
+#############################################################
+
+if ( ! $?SYN_ENV_LOADED ) then
+    echo "ERROR: no PDK loaded."
+    echo "       Run 'vlsi-tooling/syn tsmc65LP' first."
+    exit 1
+endif
+
+if ( ! $?SNPS_STIL2VERILOG ) then
+    echo "ERROR: SNPS_STIL2VERILOG is not set."
+    echo "       Check the TESTMAX row in synopsys_tools.cshrc."
+    exit 1
+endif
+
+if ( ! -x "$SNPS_STIL2VERILOG" ) then
+    echo "ERROR: $SNPS_STIL2VERILOG is missing or not executable."
+    echo "       The TestMAX install has moved."
+    exit 1
+endif
+
+# Borrowed from an unrelated product, so it is the path most likely to
+# move under a tool upgrade. Tested for existence first: an unset
+# variable is a fatal csh error, not an empty string.
+if ( ! $?SNPS_LIBSTDCXX_DIR ) then
+    echo "ERROR: SNPS_LIBSTDCXX_DIR is not set, so no usable libstdc++ was found."
+    echo "       See the note in synopsys_tools.cshrc."
+    exit 1
+endif
+
+if ( ! -f "$SNPS_LIBSTDCXX_DIR/libstdc++.so.6" ) then
+    echo "ERROR: no libstdc++ at $SNPS_LIBSTDCXX_DIR"
+    echo "       stil2verilog needs GLIBCXX_3.4.29 or newer and this"
+    echo "       machine's system libstdc++ is older than that. Find"
+    echo "       another copy in the Synopsys tree with:"
+    echo ""
+    echo '         find $SYN_DIR -name "libstdc++.so.6*" -not -name "*.py" \'
+    echo '           | grep -Ev "aarch64|SOL|ppc"'
+    echo ""
+    echo "       then point SNPS_LIBSTDCXX_DIR at it in"
+    echo "       synopsys_tools.cshrc."
+    exit 1
+endif
+
+if ( $?LD_LIBRARY_PATH ) then
+    setenv LD_LIBRARY_PATH "${SNPS_LIBSTDCXX_DIR}:${LD_LIBRARY_PATH}"
+else
+    setenv LD_LIBRARY_PATH "$SNPS_LIBSTDCXX_DIR"
+endif
+
+exec "$SNPS_STIL2VERILOG" $argv:q

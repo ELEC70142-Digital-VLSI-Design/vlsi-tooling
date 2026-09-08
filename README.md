@@ -1,197 +1,146 @@
-# Synopsys environment setup
+##### Imperial College London, Department of Electrical & Electronic Engineering
 
-Everything needed to get Fusion Compiler and a PDK onto `PATH` for the labs. Replaces `/usr/local/bin/synopsys.cshrc`, which sets three variables and whose tool paths no longer resolve.
 
-## Files
+#### ELEC70142 Digital VLSI Design
 
-| File | Purpose |
+### Lab 0 - VLSI Environment Setup
+
+##### *Peter Cheung, v1.0 - 4 September 2026*
+---
+
+**Synopsys** is one of the main suppliers of the software used to design integrated circuits. Their tools take a design written in Verilog and turn it into the masks a foundry can manufacture. Across these labs you will use **_Fusion Compiler_**, **_VCS_**, **_Custom Compiler_**, **_TestMAX_** and **_Formality_**. You will also use tools from Siemens, mainly **_Calibre_**.
+
+A tool on its own knows nothing about the silicon your design will be built in. That comes from a **process design kit (PDK)**, supplied by the foundry that manufactures the chip. It describes one manufacturing process: the transistors, the metal layers, the design rules, and a library of logic gates already built and characterised for it. We use TSMC's 65nm low power process.
+
+This lab puts the tools and a PDK on your `PATH`. The following labs depend on this setup.
+
+**_Where to put this repository on the server_**
+
+The lab instructions assume you clone it into a suitable folder in your home directory - e.g. `~/Labs`, alongside the lab directories:
+
+```
+~/Labs/
+├── vlsi-tooling/     <- this repository
+├── Lab_1/
+├── Lab_2/
+...
+```
+
+
+---
+### Task 1 - Get the files onto the server
+---
+
+Clone the repository into `~/Labs`:
+
+```bash
+mkdir -p ~/Labs
+cd ~/Labs
+git clone git@github.com:sne-samal/vlsi-tooling.git
+```
+
+> If you copied the files across with `scp` rather than cloning them, the executable bit is not always preserved. Restore it with `chmod +x ~/Labs/vlsi-tooling/syn`.
+
+---
+### Task 2 - Load the tools and a PDK
+---
+
+**_Step 1: See which PDKs are available_**
+
+```bash
+cd ~/Labs
+vlsi-tooling/syn
+```
+
+This lists every kit the repository knows about with a one line description. It also confirms the wrapper runs at all.
+
+**_Step 2: Load the TSMC 65nm low power kit_**
+
+```bash
+vlsi-tooling/syn tsmc65LP
+```
+
+> `syn` replaces your shell with a **fresh tcsh** carrying the environment. This is deliberate: it means the setup can never half-apply itself to the shell you were working in. It also loads **one PDK per shell**, so to switch PDK you type `exit` first.
+
+You must run `syn` once in every terminal window, before the first Synopsys tool in that window. Nothing is written to your `~/.cshrc`.
+
+**_Step 3: Read what it prints_**
+
+The load prints three blocks. Read them rather than scrolling past.
+
+| Block | What to look for |
 |---|---|
-| `syn` | User-facing command. Lists kits, or loads one into a fresh `tcsh`. |
-| `custom` | User-facing command. Seeds the working directory, then launches Custom Compiler. Lab 2 onwards. |
-| `setup.cshrc` | Entry point. Sources the tool file, then the kit file, then reports both. |
-| `synopsys_tools.cshrc` | `PATH`, licence servers, per-tool version discovery. PDK-independent. |
-| `kits/<kit>.cshrc` | Every path for one PDK, exported to the environment. |
-| `kits/<kit>.tcl` | The same paths under shorter names, plus cell names, corners and layers. Lab scripts source this. |
-| `kits/<kit>.libdefs` | Library list. `custom` copies it to `./lib.defs`. |
-| `build_ndm.tcl` | One-time build of the NDM reference libraries Fusion Compiler needs. |
-| `check_ndm.tcl` | Verifies that build produced usable libraries. |
+| `--- tools ---` | The resolved path of each tool. `NOT ON PATH` against a tool means the install was not found, and that tool will not run. |
+| `--- kit: tsmc65LP ---` | The technology file, reference libraries and Tcl setup for the PDK. The `ref libs` line is where the shared libraries were found. |
+| `--- licences ---` | The licence servers being used. |
 
-- Load order is `syn` -> `setup.cshrc` -> `synopsys_tools.cshrc` -> `kits/<kit>.cshrc`.
-- Adding a tool is one row in a table; adding a PDK is two files in `kits/`, three if the
-  PDK is used from Custom Compiler.
-- `syn` sets up a shell. `custom` sets up a *directory*, then starts a GUI in it. They are
-  the counterparts of the Cadence `pdk` and `cadence` commands respectively.
-
-## Setup
-
-Prerequisites: a machine with the Synopsys install under `/eda/synopsys`, the TSMC back-end libraries under `/eda/cadence_tools`, `tcsh`, and a Synopsys licence. Scripts use the set up specific to `ee-mill2`; anywhere else, see *Site-specific values* below.
-
-1. **Get the files onto the server.** From your local checkout:
-
-   ```bash
-   cd ~
-   mkdir Labs
-   cd Labs
-   git clone git@github.com:sne-samal/vlsi-tooling.git
-   ```
-
-2. **Make the wrapper executable.** `scp` does not always preserve the bit:
-
-   ```bash
-   chmod +x ~/Labs/tools/syn
-   ```
-
-3. **List the available kits.** Confirms the wrapper runs and finds `kits/`:
-
-   ```bash
-   ~/Labs/tools/syn
-   ```
-
-4. **Load a kit.** This replaces your shell with a fresh `tcsh` carrying the environment:
-
-   ```bash
-   ~/Labs/tools/syn tsmc65LP
-   ```
-
-   It prints a `--- tools ---` block with the resolved path of each tool, then the kit's
-   tech file, reference libraries and Tcl setup, then the licence servers. Any tool
-   showing `NOT ON PATH` means no matching directory was found under `$SYN_DIR`.
-
-5. **Check the environment by hand** (optional):
-
-   ```bash
-   which fc_shell
-   echo $SYN_KIT_TCL
-   ls -l $SYN_TECH_FILE
-   ```
-
-6. **Build the NDM reference libraries.** One time per user, unless a shared copy already
-   exists. Fusion Compiler cannot read the Milkyway libraries the kit ships, so this
-   converts LEF plus Liberty `.db` into NDM. Output is about 36 MB:
-
-   ```bash
-   lm_shell -f ~/Labs/tools/build_ndm.tcl
-   ```
-
-7. **Verify the build.** Checks contents rather than exit status, because a failed build
-   can still exit cleanly with an empty library:
-
-   ```bash
-   fc_shell -batch -f ~/Labs/tools/check_ndm.tcl
-   ```
-
-   Expect `PASS` and `special cells : all 28 present`.
-
-8. **Unload** with `exit`, which drops you back into the shell you started from. Only one
-   kit can be loaded at a time; load another by exiting first.
-
-## Launching Custom Compiler
-
-Lab 1 is entirely batch, so `syn` is all it needs. Lab 2 is a GUI lab, and Custom Compiler
-will not find a single standard cell unless the directory it is launched from contains a
-`lib.defs` naming the OpenAccess libraries. There is no error when that file is absent:
-Library Manager simply comes up empty.
+**_Step 4: Check the environment by hand_** (optional)
 
 ```bash
-tools/syn tsmc65LP     # once per shell
-cd Lab_2
-custom &
+which fc_shell
+echo $SYN_TOOLS_DIR
+ls -l $SYN_TECH_FILE
 ```
 
-`custom` does two things before starting the tool, both guarded on the file not already
-being there, exactly as the Cadence `tsmcsetup.cshrc` was:
+`$SYN_TOOLS_DIR` is the path to this repository. Use it whenever a lab asks you to run a script from here, and the command will work from any directory.
 
-1. Copies `kits/<kit>.libdefs` to `./lib.defs`. **An existing `lib.defs` is never
-   overwritten**, because Custom Compiler appends to it when a student creates their own
-   library.
-2. Copies `display.drf` if the kit provides one.
+---
+### Task 3 - Check the reference libraries
+---
 
-NOTE - still can't see layouts on standard cells
+Fusion Compiler does not read the foundry's Liberty and LEF files directly. It reads its own format, an **NDM** library, and the TSMC kit does not ship one. These have been built for you and put in a shared read-only location, so there is nothing here for you to build. The `ref libs` line printed in Task 2 is where they were found.
 
-## Site-specific values
+There are **five**. Two hold the standard cells, split because the fillers and tap cells have no timing arcs and so are absent from the timed library. The other three hold the IO cells and bond pads, which only the project uses.
 
-Five values are hardcoded to this server and account. Each is marked in the scripts with a
-`SITE:` comment, so:
+Check that they are readable and complete before going any further:
 
 ```bash
-grep -rn "SITE:" tools/
+fc_shell -f $SYN_TOOLS_DIR/check_ndm.tcl
 ```
 
-| Value | File | Set to | Change it if |
-|---|---|---|---|
-| `SYN_DIR` | `synopsys_tools.cshrc` | `/eda/synopsys/2025-26/RHELx86` | The Synopsys install lives elsewhere, or the academic year rolls over. |
-| `SNPSLMD_LICENSE_FILE` | `synopsys_tools.cshrc` | Three Imperial EEE licence servers | Using different license location(s). |
-| `TSMC65_HOME` | `kits/tsmc65LP.cshrc` | `/eda/cadence_tools/kits/tsmc/beLibs/65nm/TSMCHOME/digital` | The TSMC kit is installed elsewhere. |
-| `SYN_NDM_DIR` | `kits/tsmc65LP.cshrc` | `$HOME/vlsi_ndm` | You want one shared read-only library rather than a copy per user. |
-| PDK root in `lib.defs` | `kits/tsmc65LP.libdefs` | `/eda/cadence_tools/kits/tsmc/65n_LP` | The front-end TSMC PDK is installed elsewhere. Copied verbatim, so the paths are literal. |
+Expect:
 
-`SYN_NDM_DIR` is the one most likely to need changing, and it does not require editing the
-file. Export it before loading, and the kit will use it:
+```
+ special cells       : all 28 present
+ pad cells           : all 15 present
+
+PASS
+```
+
+This checks the contents rather than the exit status, because a library can exist and still be empty or missing cells. The 28 are the cells the place and route scripts ask for **by name**: the tap cell, the tie cells, the fillers, and the clock tree buffers and inverters. A missing one otherwise surfaces much later as a confusing placement or clock tree error.
+
+If you see `FAIL`, or the check reports a library that does not exist, stop and ask for help.
+
+---
+### Task 4 - Unload
+---
 
 ```bash
-setenv SYN_NDM_DIR /path/to/shared/ndm
-tools/syn tsmc65LP
+exit
 ```
 
-Everything else in `kits/tsmc65LP.cshrc` is a deliberate choice of library rather than a
-path to a machine: the 9lmT2 metal stack, the 7-track standard-Vt cells, and the matching
-TLUPlus files. These three must stay consistent with each other.
+This drops you back into the shell you started from and removes the environment with it. Since only one PDK can be loaded per shell, this is also how you switch PDK.
 
-## Adding a tool
+---
+### Files in this repository
+---
 
-Add one row to the table in `synopsys_tools.cshrc`, of the form
-`"<install directory prefix>:<variable name>"`. The setup finds the newest directory
-matching `<prefix>_*` under `$SYN_DIR` and appends its `bin` to `PATH`.
+| File | What it is |
+|---|---|
+| `syn` | Lists the available PDKs, or loads one into a fresh shell. |
+| `custom` | Prepares the current directory, then launches Custom Compiler in it. |
+| `memcomp` | Launches TSMC's MC2 memory compiler in the current directory. |
+| `stil2verilog` | Wrapper round the TestMAX pattern translator, which needs a system library that is not on the default path. |
+| `setup.cshrc` | Entry point: sources the tool file, then the kit file, then reports what resolved. |
+| `synopsys_tools.cshrc` | Tool paths, version discovery and licence servers, independent of any PDK. |
+| `kits/<kit>.cshrc` | Every filesystem path belonging to one PDK, exported into the environment. |
+| `kits/<kit>.tcl` | The same paths under shorter names for Tcl scripts, plus cell names, corners and layers. |
+| `kits/<kit>.libdefs` | The OpenAccess library list, copied into your working directory as `lib.defs`. |
+| `build_ndm.tcl` | Builds the shared NDM reference libraries from the foundry's LEF and Liberty files, standard cells plus the IO and bond pad libraries a padring needs. Run once by a maintainer, not per student. |
+| `check_ndm.tcl` | Reports whether those libraries are readable and hold the cells the labs and the project ask for by name. |
 
-The trailing underscore is part of the glob and matters: `TESTMAX_*` must not also match
-`TESTMAX-ALE_*`. Never put a literal `*` in that list; `csh` expands the word list of a
-`foreach` and a pattern matching nothing aborts the script.
+Load order is `syn` -> `setup.cshrc` -> `synopsys_tools.cshrc` -> `kits/<kit>.cshrc`.
 
-To pin a version rather than take the newest, export it before loading:
+No script in any lab contains a PDK path. They start with `source $env(SYN_KIT_TCL)` and use the names defined there, so changing PDK means loading a different kit and nothing else.
 
-```bash
-setenv SNPS_FC_VERSION FS-COMPILER_2025.06-SP2a
-tools/syn tsmc65LP
-```
-
-## Adding a PDK
-
-Two files in `kits/`, and nothing else:
-
-- `<kit>.cshrc` - paths only. Its first line must be a `# DESCRIPTION:` comment, which is
-  what `syn` prints in the kit listing. It must export the variables listed in section 5 of
-  `notes/environment_setup.md`.
-- `<kit>.tcl` - reads those variables back out of the environment, and adds the
-  library-specific knowledge that has no shell equivalent: cell names, corner labels,
-  routing directions, site name.
-- `<kit>.libdefs` - only if the PDK is used from Custom Compiler. The OpenAccess libraries
-  to define, copied verbatim into the launch directory, so it holds literal paths.
-  `<kit>.cshrc` must point `SYN_LIBDEFS` at it.
-
-Lab scripts never contain a PDK path. They open with `source $env(SYN_KIT_TCL)` and use the
-names defined there, so switching PDK is a matter of loading a different kit.
-
-## What this changes from the original setup script
-
-The original was three lines: set `SYN_DIR`, append four `bin` directories to `PATH`, set
-`SNPSLMD_LICENSE_FILE`. The licence line is carried over unchanged. The rest is new.
-
-- **Tool paths are discovered, not hardcoded.** The original's four paths (`syn/bin`,
-  `tetramax/bin`, `formality/bin`, `primetime/bin`) describe a 2019 install layout. The
-  current tree uses versioned per-tool directories, so none of them resolved and no tool
-  reached `PATH`. Discovery means a Synopsys upgrade needs no edit.
-- **Twelve tools instead of four**, including Fusion Compiler, ICC2, VCS, Verdi, IC
-  Validator, StarRC, Library Compiler and Custom Compiler. None of the tools the labs
-  actually use were in the original.
-- **`VCS_HOME`, `VERDI_HOME`, `NOVAS_HOME` are set.** Those tools read them at startup and
-  will not run on a `PATH` entry alone.
-- **`LM_LICENSE_FILE` is appended to**, not overwritten, for the tools that still fall back
-  to the generic FlexLM variable.
-- **Failures are reported.** Missing install root, missing tool directory and missing kit
-  file each produce a message. The load prints what resolved, so a problem surfaces at
-  load time instead of as `command not found` an hour later.
-- **The PDK is included.** The original was tools-only. Tech file, reference libraries,
-  TLUPlus, simulation models, cell names and corners now come from the kit files.
-- **One kit per shell, with a clean unload.** `syn` guards against double-loading and
-  `exit` restores the shell you came from.
-- **`~/.cshrc` is never touched.**
+Running this anywhere else, e.g. other EEE teaching servers, needs a handful of paths changed. See [docs/site_setup.md](docs/site_setup.md).

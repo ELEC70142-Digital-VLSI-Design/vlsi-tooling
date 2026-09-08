@@ -102,11 +102,62 @@ if ( $?SNPS_VCS )   setenv VCS_HOME   "$SNPS_VCS"
 if ( $?SNPS_VERDI ) setenv VERDI_HOME "$SNPS_VERDI"
 if ( $?SNPS_VERDI ) setenv NOVAS_HOME "$SNPS_VERDI"
 
-# --- Lab wrappers ---------------------------------------------------
-# Puts "custom" (and "syn" itself) on PATH, so a student can launch the
-# GUI from whichever lab directory they are working in rather than
-# spelling out a relative path to tools/. Mirrors how the Cadence
-# "cadence" script lived on PATH via $CDS_TOP/../bin.
+# stil2verilog is not on the tool table's PATH and is linked against a
+# newer libstdc++ than this machine ships, so it runs through the
+# wrapper of the same name. Not put on PATH itself: $SYN_TOOLS_DIR is
+# appended last, so the real binary would shadow the wrapper.
+if ( $?SNPS_TESTMAX ) then
+    setenv SNPS_STIL2VERILOG "$SNPS_TESTMAX/linux64/syn/bin/stil2verilog"
+endif
+
+# TODO check whether the borrowed libstdc++ below is needed at all, and
+# why TestMAX's own copy under embedit/linux64/lib_cc was unusable.
+
+# stil2verilog needs GLIBCXX_3.4.29; the system libstdc++ is 3.4.25.
+# SITE: borrowed from Custom Compiler's Tcl script debugger.
+if ( $?SNPS_CUSTOM ) then
+    setenv SNPS_LIBSTDCXX_DIR "$SNPS_CUSTOM/apps/tclscriptdebugger/TCLIDE/lib/linux64"
+endif
+
+# TestMAX ATPG builds the path to its message files as
+# $SYNOPSYS/auxx/syn/dc.err and will not start without this. It wants
+# the synthesis install, not the TestMAX one.
+if ( $?SNPS_SYN ) setenv SYNOPSYS "$SNPS_SYN"
+
+# --- Calibre (Siemens, not Synopsys) --------------------------------
+# Signoff DRC and LVS. Here rather than in a kit file because the
+# install root and licence are the same whichever PDK is loaded; the
+# rule decks are kit-specific and live in kits/<kit>.cshrc.
+#
+# Custom Compiler's "Tools > Calibre" menu needs MGC_HOME set before
+# launch, or every action in it fails.
+#
+# SITE: install root.
+setenv MGC_HOME /eda/Siemens/2025-26/RHELx86/CALIBRE_2025.4/aok_cal_2025.4_18.11
+setenv CALIBRE_HOME "$MGC_HOME"
+
+if ( -d "$MGC_HOME/bin" ) then
+    setenv PATH "${PATH}:$MGC_HOME/bin"
+    setenv MGC_DOC_PATH "$MGC_HOME/docs"
+    # The 32-bit binary is the default and is unusable on this server.
+    setenv USE_CALIBRE_64 YES
+    # Keeps the Calibre menu in the host tool between invocations.
+    setenv MGC_CALIBRE_PRESERVE_MENU_TRIGGER YES
+else
+    echo "  WARNING: MGC_HOME=$MGC_HOME not found; DRC and LVS will not run"
+endif
+
+# Siemens uses its own FlexLM variable, so this never collides with
+# SNPSLMD_LICENSE_FILE. Append in case another Siemens tool is loaded.
+if ( $?MGLS_LICENSE_FILE ) then
+    setenv MGLS_LICENSE_FILE "${MGLS_LICENSE_FILE}:1717@ee-fs1.ee.ic.ac.uk:1717@ib-artemis.ib.ic.ac.uk"
+else
+    setenv MGLS_LICENSE_FILE 1717@ee-fs1.ee.ic.ac.uk:1717@ib-artemis.ib.ic.ac.uk
+endif
+
+# --- Wrapper scripts ------------------------------------------------
+# Puts "custom", "memcomp", "stil2verilog" and "syn" itself on PATH, so
+# they can be run from any working directory.
 
 if ( $?SYN_TOOLS_DIR ) setenv PATH "${PATH}:$SYN_TOOLS_DIR"
 

@@ -1,3 +1,15 @@
-DEFINE tsmcN65 /eda/cadence_tools/kits/tsmc/65n_LP/tsmcN65
-DEFINE SEALRING /eda/cadence_tools/kits/tsmc/65n_LP/tsmc_libraries/TSMCHOME/SEALRING
-INCLUDE /eda/cadence_tools/kits/tsmc/65n_LP/tsmcBE.lib
+# Library list seeded into a working directory by "custom".
+# $VARIABLES are expanded to literal paths at seed time; Custom Compiler
+# does not expand them itself.
+#
+# basic holds ipin/opin/iopin, the symbols Custom Compiler instantiates
+# when it creates a schematic pin. Without it, pin creation fails with
+# SE-924 and an imported design gets no top-level terminals.
+DEFINE basic               $SNPS_CUSTOM/auxx/samples/basic
+
+# The cell library comes from 65nm_tmp, not 65nm: beLibs/65nm ships
+# frame-only layout views with no silicon.
+# TODO: 65nm_tmp used here, change when a non-tmp solution is found.
+DEFINE tsmcN65             $TSMC65_PDK/tsmcN65
+DEFINE SEALRING            $TSMC65_PDK/tsmc_libraries/TSMCHOME/SEALRING
+DEFINE tcbn65lpbwp7t_9lm   $TSMC65_OA_TSMCHOME/libs/tcbn65lpbwp7t_9lm

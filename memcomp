@@ -1,0 +1,157 @@
+#!/bin/csh -f
+#############################################################
+#
+#  memcomp - launch TSMC's MC2 SRAM memory compiler.
+#
+#  Author:   Sne Samal
+#  Date:     2026-08-25
+#  Version:  1.0
+#
+#  Runs the compiler in the current directory, where it writes the
+#  generated views.
+#
+#      vlsi-tooling/syn tsmc65LP   load tools + PDK  (once per shell)
+#      cd <working directory>
+#      memcomp spsram              generate a single port SRAM
+#
+#############################################################
+
+# --- Preconditions --------------------------------------------------
+
+if ( ! $?SYN_ENV_LOADED ) then
+    echo "ERROR: no PDK loaded."
+    echo "       Run 'vlsi-tooling/syn tsmc65LP' first, then 'memcomp' from your working directory."
+    exit 1
+endif
+
+if ( ! $?SYN_MEMCOMP_DIR ) then
+    echo "ERROR: kit '$SYN_KIT' ships no memory compiler (SYN_MEMCOMP_DIR unset)."
+    exit 1
+endif
+
+if ( ! -d "$SYN_MEMCOMP_DIR" ) then
+    echo "ERROR: $SYN_MEMCOMP_DIR does not exist."
+    echo "       Check the memory compiler section of kits/$SYN_KIT.cshrc."
+    exit 1
+endif
+
+# --- Arguments ------------------------------------------------------
+
+if ( $#argv < 1 ) then
+    echo "Usage: memcomp {spsram|dpsram}"
+    echo ""
+    echo "  spsram   single port SRAM, one shared read/write port"
+    echo "  dpsram   dual port SRAM, two independent ports"
+    echo ""
+    echo "Output is written to the current directory: `pwd`"
+    if ( $?SYN_MEMCOMP_DOCS ) echo "Documentation: $SYN_MEMCOMP_DOCS"
+    exit 1
+endif
+
+set ram = "$argv[1]"
+shift
+
+switch ( "$ram" )
+    case spsram:
+        set libglob = "tsn65lpllspsramwor_*"
+        breaksw
+    case dpsram:
+        set libglob = "tsn65lplldpsram_*"
+        breaksw
+    default:
+        echo "ERROR: unknown memory type '$ram'."
+        echo "       Usage: memcomp {spsram|dpsram}"
+        exit 1
+endsw
+
+# --- Locate the compiler engine and the memory library --------------
+# sort -Vr picks the newest date stamp if the kit carries more than one.
+
+set mc_engine = `find "$SYN_MEMCOMP_DIR" -maxdepth 1 -type d -name "tsmc_n65lpmc_*" | sort -Vr | head -1`
+if ( "$mc_engine" == "" ) then
+    echo "ERROR: no tsmc_n65lpmc_* engine directory under $SYN_MEMCOMP_DIR"
+    exit 1
+endif
+
+set mc_bin = `find "$mc_engine/install" -type f -name "mc2-eu" -path "*Linux-64*" | sort -Vr | head -1`
+if ( ! -x "$mc_bin" ) then
+    echo "ERROR: no executable mc2-eu under $mc_engine/install"
+    exit 1
+endif
+
+set mc_lib = `find "$SYN_MEMCOMP_DIR" -maxdepth 1 -type d -name "$libglob" | sort -Vr | head -1`
+if ( "$mc_lib" == "" ) then
+    echo "ERROR: no $libglob library directory under $SYN_MEMCOMP_DIR"
+    exit 1
+endif
+
+# mc2-eu resolves its .mco configuration file relative to MC_HOME, so
+# pass the basename.
+set mco = `find "$mc_lib" -maxdepth 1 -type f -name "*.mco" -printf "%f\n" | head -1`
+if ( "$mco" == "" ) then
+    echo "ERROR: no .mco configuration file in $mc_lib"
+    exit 1
+endif
+
+# --- Environment ----------------------------------------------------
+# cshrc.mc2 sets exactly three things and all three need correcting:
+#   MC2_INSTALL_DIR  the dead /usr/local/cadence delivery path
+#   path             prepends that same dead directory
+#   LM_LICENSE_FILE  overwrites ours rather than appending to it
+# So the Synopsys licence list is saved first and restored after.
+
+if ( ! -f "$mc_engine/cshrc.mc2" ) then
+    echo "ERROR: $mc_engine/cshrc.mc2 not found."
+    exit 1
+endif
+
+if ( $?LM_LICENSE_FILE ) then
+    set saved_lic = "$LM_LICENSE_FILE"
+else
+    set saved_lic = ""
+endif
+
+source "$mc_engine/cshrc.mc2"
+
+setenv MC_HOME "$mc_lib"
+
+# .../install/<release>/bin/Linux-64/mc2-eu, up three to the release.
+set mc_install = $mc_bin:h:h:h
+if ( ! -d "$mc_install" ) then
+    echo "ERROR: derived MC2_INSTALL_DIR $mc_install is not a directory."
+    exit 1
+endif
+setenv MC2_INSTALL_DIR "$mc_install"
+setenv PATH "${mc_install}/bin:${PATH}"
+
+# Kit licence first, then whatever cshrc.mc2 set, then the servers it
+# discarded. FlexLM tries them in order.
+if ( $?SYN_MEMCOMP_LICENSE ) then
+    setenv LM_LICENSE_FILE "${SYN_MEMCOMP_LICENSE}:${LM_LICENSE_FILE}"
+endif
+if ( "$saved_lic" != "" ) then
+    setenv LM_LICENSE_FILE "${LM_LICENSE_FILE}:${saved_lic}"
+endif
+
+if ( ! -w . ) then
+    echo "ERROR: `pwd` is not writable. MC2 writes its output here."
+    exit 1
+endif
+
+if ( ! $?DISPLAY ) then
+    echo "WARNING: DISPLAY is not set. MC2 is a GUI tool; connect with 'ssh -Y'."
+endif
+
+# --- Launch ---------------------------------------------------------
+
+echo "Launching memory compiler:"
+echo "  type      $ram"
+echo "  MC_HOME   $MC_HOME"
+echo "  mco       $mco"
+echo "  install   $MC2_INSTALL_DIR"
+echo "  licence   $LM_LICENSE_FILE"
+echo "  binary    $mc_bin"
+echo "  output    `pwd`"
+echo "--- starting mc2-eu ---"
+
+exec "$mc_bin" -c "$mco" -p tsmceva $argv:q
