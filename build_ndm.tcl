@@ -4,15 +4,18 @@
 ##
 ##  Author:   Sne Samal
 ##  Date:     2026-08-23
-##  Version:  1.0
+##  Version:  1.1
 ##
 ##  Run with Library Manager, NOT fc_shell, once the kit is loaded:
 ##
 ##      lm_shell -f $SYN_TOOLS_DIR/build_ndm.tcl
 ##
-##  Build once, then point create_lib at the result. Output is about
-##  36 MB on disk. Built from LEF plus db because the kit ships
-##  Milkyway, not NDM.
+##  Built from LEF plus db because the kit ships Milkyway, not NDM.
+##  Writes five libraries: two for the standard cells, about 36 MB,
+##  and three for the IO and bond pads. Point create_lib at them.
+##
+##  On failure, rerun lm_shell interactively and use
+##  "check_workspace -details all".
 ##
 ####################################################################
 
@@ -38,62 +41,86 @@ set_app_options -as_user_default \
 set_app_options -as_user_default -name design.bus_delimiters -value {[]}
 
 ####################################################################
-## Pass 1: timed cells
+## Build helper
 ####################################################################
-# -flow normal emits only cells present in both the LEF and the db, so
-# taps and fillers are dropped here and picked up by pass 2.
+# One workspace, written out and discarded. An empty process label
+# reads the db without one, which a physical-only pass needs.
 
-create_workspace $LIB_NAME \
-    -technology   $TECH_FILE \
-    -flow         normal \
-    -scale_factor $SCALE_FACTOR
+proc build_pass {workspace output flow lef dbs} {
+    global TECH_FILE SCALE_FACTOR NDM_DIR
 
-read_lef $STD_LEF
+    create_workspace $workspace \
+        -technology   $TECH_FILE \
+        -flow         $flow \
+        -scale_factor $SCALE_FACTOR
 
-foreach corner $CORNER_LABELS {
-    set db $STD_DB_DIR/${LIB_NAME}${corner}.db
-    if { ![file exists $db] } {
-        puts "ERROR: missing $db"
-        continue
+    read_lef $lef
+
+    foreach {db label} $dbs {
+        if { ![file exists $db] } {
+            puts "ERROR: missing $db"
+            continue
+        }
+        if { $label eq "" } {
+            read_db $db
+        } else {
+            read_db $db -process_label $label
+        }
     }
-    read_db $db -process_label $corner
+
+    process_workspaces -force -directory $NDM_DIR -output $output
+    remove_workspace
 }
 
-# On failure, rerun lm_shell interactively and use
-# "check_workspace -details all".
-process_workspaces -force -directory $NDM_DIR -output ${LIB_NAME}_frame_timing.ndm
+####################################################################
+## Standard cells
+####################################################################
+# Two libraries, because -flow normal emits only cells found in both
+# the LEF and the db, which drops the untimed tap and FILL cells.
+# -flow physical_only recovers those. It reads one db as well, or the
+# timed cells would appear in both libraries; any corner will do, all
+# three hold the same cell set.
 
-remove_workspace
+set std_dbs {}
+foreach corner $CORNER_LABELS {
+    lappend std_dbs $STD_DB_DIR/${LIB_NAME}${corner}.db $corner
+}
+
+build_pass $LIB_NAME ${LIB_NAME}_frame_timing.ndm normal \
+    $STD_LEF $std_dbs
+
+build_pass ${LIB_NAME}_po ${LIB_NAME}_physical_only.ndm physical_only \
+    $STD_LEF [list $STD_DB_DIR/${LIB_NAME}[lindex $CORNER_LABELS 0].db ""]
 
 ####################################################################
-## Pass 2: physical-only cells
+## IO cells and bond pads
 ####################################################################
-# -flow physical_only emits the cells found only in the physical files,
-# so the taps and the FILL family. The db is read here to tell the flow
-# which names to exclude, or every cell would appear in both libraries.
-# One corner is enough: all three db files hold the same cell set.
+# The IO library splits the same way the standard cells do, PCORNER and
+# the PFILLER family having no timing. The bond pads ship no db at all,
+# so one physical-only pass from the LEF.
 
-create_workspace ${LIB_NAME}_po \
-    -technology   $TECH_FILE \
-    -flow         physical_only \
-    -scale_factor $SCALE_FACTOR
+set io_dbs {}
+foreach corner $CORNER_LABELS {
+    lappend io_dbs [io_db $corner] $corner
+}
 
-read_lef $STD_LEF
-read_db  $STD_DB_DIR/${LIB_NAME}[lindex $CORNER_LABELS 0].db
+build_pass $IO_LIB_NAME ${IO_LIB_NAME}_frame_timing.ndm normal \
+    $IO_LEF $io_dbs
 
-process_workspaces -force -directory $NDM_DIR -output ${LIB_NAME}_physical_only.ndm
+build_pass ${IO_LIB_NAME}_po ${IO_LIB_NAME}_physical_only.ndm physical_only \
+    $IO_LEF [list [io_db [lindex $CORNER_LABELS 0]] ""]
 
-remove_workspace
+build_pass $BPAD_LIB_NAME ${BPAD_LIB_NAME}_physical_only.ndm physical_only \
+    $BPAD_LEF {}
 
 ####################################################################
 ## Result
 ####################################################################
 # process_workspaces can return without writing anything, so check the
-# outputs are on disk before claiming success. Without the exit,
-# lm_shell drops into an interactive prompt.
+# files are on disk before reporting success.
 
 set missing {}
-foreach lib $REF_LIBS {
+foreach lib [concat $REF_LIBS $PAD_REF_LIBS] {
     if { ![file exists $lib] } { lappend missing $lib }
 }
 
@@ -101,6 +128,9 @@ puts "=========================================="
 puts " NDM directory : $NDM_DIR"
 puts "   ${LIB_NAME}_frame_timing.ndm   corners: $CORNER_LABELS"
 puts "   ${LIB_NAME}_physical_only.ndm  taps and fillers"
+puts "   ${IO_LIB_NAME}_frame_timing.ndm   corners: $CORNER_LABELS"
+puts "   ${IO_LIB_NAME}_physical_only.ndm  corner and IO fillers"
+puts "   ${BPAD_LIB_NAME}_physical_only.ndm  bond pads"
 puts "------------------------------------------"
 
 if { [llength $missing] } {

@@ -8,14 +8,14 @@
 #  Date:     2026-09-02
 #  Version:  1.0
 #
-#      syn tsmc65LP      load tools + PDK (once per shell)
+#      vlsi-tooling/syn tsmc65LP   load tools + PDK (once per shell)
 #      stil2verilog <patterns>.stil <output basename>
 #
 #############################################################
 
 if ( ! $?SYN_ENV_LOADED ) then
     echo "ERROR: no PDK loaded."
-    echo "       Run 'syn tsmc65LP' first."
+    echo "       Run 'vlsi-tooling/syn tsmc65LP' first."
     exit 1
 endif
 
