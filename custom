@@ -7,9 +7,9 @@
 #  Date:     2026-08-25
 #  Version:  2.0
 #
-#      syn tsmc65LP      load tools + PDK  (once per shell)
+#      vlsi-tooling/syn tsmc65LP   load tools + PDK  (once per shell)
 #      cd <working directory>
-#      custom &          seed the directory, then launch
+#      custom &                    seed the directory, then launch
 #
 #############################################################
 
@@ -17,7 +17,7 @@
 
 if ( ! $?SYN_ENV_LOADED ) then
     echo "ERROR: no PDK loaded."
-    echo "       Run 'syn tsmc65LP' first, then 'custom' from your working directory."
+    echo "       Run 'vlsi-tooling/syn tsmc65LP' first, then 'custom' from your working directory."
     exit 1
 endif
 

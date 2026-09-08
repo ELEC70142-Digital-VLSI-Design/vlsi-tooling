@@ -121,6 +121,60 @@ set CTS_INVERTERS { CKND0BWP7T CKND1BWP7T CKND2BWP7T CKND3BWP7T \
 set TAP_DISTANCE 60
 
 ####################################################################
+## IO and bond pads
+####################################################################
+# Only a design with a padring needs any of this. PAD_REF_LIBS is not
+# folded into REF_LIBS: a chip-level script appends it, the way a lab
+# with a memory appends the memory.
+#
+#     set REF_LIBS [concat $REF_LIBS $PAD_REF_LIBS]
+
+set IO_LIB_NAME   $env(TSMC65_IO)
+set BPAD_LIB_NAME $env(TSMC65_BPAD)
+
+set IO_LEF        $env(SYN_IO_LEF)
+set IO_DB_DIR     $env(SYN_IO_DB_DIR)
+set IO_DB_SUFFIX  $env(TSMC65_IO_SUFFIX)
+set BPAD_LEF      $env(SYN_BPAD_LEF)
+set PAD_REF_LIBS  $env(SYN_PAD_REF_LIBS)
+
+set IO_SIM_MODELS $env(SYN_IO_SIM_MODELS)
+set IO_GDS        $env(SYN_IO_GDS)
+set BPAD_GDS      $env(SYN_BPAD_GDS)
+
+# The db name carries the corner and the IO supply suffix, so one
+# place spells it: tphn65lpnv2od3_sltc.db at tc with the 3.3V domain.
+
+proc io_db {corner} {
+    global IO_DB_DIR IO_LIB_NAME IO_DB_SUFFIX
+    return $IO_DB_DIR/${IO_LIB_NAME}${corner}${IO_DB_SUFFIX}.db
+}
+
+set IO_CORNER_CELL PCORNER
+set BPAD_CELL      PAD60LU_SL
+
+# Largest first, as with the standard cell fillers.
+
+set IO_FILLER_CELLS { PFILLER20 PFILLER10 PFILLER5 PFILLER1 \
+                      PFILLER05 PFILLER0005 }
+
+# The signal and supply pads the padframe instantiates. Named here so
+# the library can be checked before a chip-level run rather than
+# failing on the first missing reference.
+
+set IO_CELLS { PDUW0408SCDG PXOE2CDG PVDD1CDG PVDD2CDG \
+               PVDD2ANA PVDD2POC PVSS3CDG }
+
+# The only two pads in the padframe that declare a PG pin in the LEF,
+# so the only two the core power plan has to reach. The IO supply and
+# the power-on-control rail are formed by abutment along the ring and
+# have no pin at all, which is also why they have to be labelled by
+# hand in the layout before LVS will pass.
+
+set IO_PWR_CELL PVDD1CDG
+set IO_GND_CELL PVSS3CDG
+
+####################################################################
 ## Power nets
 ####################################################################
 
@@ -130,16 +184,21 @@ set GND_NET VSS
 ####################################################################
 ## Sanity check
 ####################################################################
-# A missing RC file is only a warning, and silently leaves layers with
-# no parasitics.
+# Everything a flow reads, pads included. Build inputs are left out:
+# build_ndm.tcl names its own missing LEF and db and stops. These fail
+# quietly instead, a missing RC file being only a warning that leaves
+# layers with no parasitics.
 
 proc check_kit {} {
-    global TECH_FILE REF_LIBS TLUPLUS_MAX TLUPLUS_MIN TLUPLUS_TYP
-    global GDS_MAP CELL_GDS
+    global TECH_FILE REF_LIBS PAD_REF_LIBS
+    global TLUPLUS_MAX TLUPLUS_MIN TLUPLUS_TYP
+    global GDS_MAP CELL_GDS IO_GDS BPAD_GDS
+    global SIM_MODELS IO_SIM_MODELS
     set missing {}
     foreach f [concat [list $TECH_FILE $TLUPLUS_MAX $TLUPLUS_MIN $TLUPLUS_TYP \
-                            $GDS_MAP $CELL_GDS] \
-                      $REF_LIBS] {
+                            $GDS_MAP $CELL_GDS $IO_GDS $BPAD_GDS \
+                            $SIM_MODELS $IO_SIM_MODELS] \
+                      $REF_LIBS $PAD_REF_LIBS] {
         if { ![file exists $f] } { lappend missing $f }
     }
     if { [llength $missing] } {
@@ -150,3 +209,4 @@ proc check_kit {} {
     puts "Kit tsmc65LP: all inputs present."
     return 1
 }
+

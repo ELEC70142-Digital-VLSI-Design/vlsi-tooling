@@ -90,9 +90,9 @@ ls -l $SYN_TECH_FILE
 
 Fusion Compiler does not read the foundry's Liberty and LEF files directly. It reads its own format, an **NDM** library, and the TSMC kit does not ship one. These have been built for you and put in a shared read-only location, so there is nothing here for you to build. The `ref libs` line printed in Task 2 is where they were found.
 
-There are **two** of them, not one. The fillers and tap cells have no timing arcs, so they are absent from the timed library and are held separately.
+There are **five**. Two hold the standard cells, split because the fillers and tap cells have no timing arcs and so are absent from the timed library. The other three hold the IO cells and bond pads, which only the project uses.
 
-Check that both are readable and complete before going any further:
+Check that they are readable and complete before going any further:
 
 ```bash
 fc_shell -f $SYN_TOOLS_DIR/check_ndm.tcl
@@ -102,6 +102,7 @@ Expect:
 
 ```
  special cells       : all 28 present
+ pad cells           : all 15 present
 
 PASS
 ```
@@ -135,11 +136,11 @@ This drops you back into the shell you started from and removes the environment 
 | `kits/<kit>.cshrc` | Every filesystem path belonging to one PDK, exported into the environment. |
 | `kits/<kit>.tcl` | The same paths under shorter names for Tcl scripts, plus cell names, corners and layers. |
 | `kits/<kit>.libdefs` | The OpenAccess library list, copied into your working directory as `lib.defs`. |
-| `build_ndm.tcl` | Builds the shared NDM reference libraries from the foundry's LEF and Liberty files. Run once by a maintainer, not per student. |
-| `check_ndm.tcl` | Reports whether those libraries are readable and hold the cells the labs need. |
+| `build_ndm.tcl` | Builds the shared NDM reference libraries from the foundry's LEF and Liberty files, standard cells plus the IO and bond pad libraries a padring needs. Run once by a maintainer, not per student. |
+| `check_ndm.tcl` | Reports whether those libraries are readable and hold the cells the labs and the project ask for by name. |
 
 Load order is `syn` -> `setup.cshrc` -> `synopsys_tools.cshrc` -> `kits/<kit>.cshrc`.
 
 No script in any lab contains a PDK path. They start with `source $env(SYN_KIT_TCL)` and use the names defined there, so changing PDK means loading a different kit and nothing else.
 
-Running this anywhere other than the EEE teaching servers needs a handful of paths changed. See [docs/site_setup.md](docs/site_setup.md).
+Running this anywhere else, e.g. other EEE teaching servers, needs a handful of paths changed. See [docs/site_setup.md](docs/site_setup.md).
