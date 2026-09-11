@@ -13,3 +13,24 @@ DEFINE basic               $SNPS_CUSTOM/auxx/samples/basic
 DEFINE tsmcN65             $TSMC65_PDK/tsmcN65
 DEFINE SEALRING            $TSMC65_PDK/tsmc_libraries/TSMCHOME/SEALRING
 DEFINE tcbn65lpbwp7t_9lm   $TSMC65_OA_TSMCHOME/libs/tcbn65lpbwp7t_9lm
+
+# The padring, for a chip: the IO cells in their mt_2 bond option and
+# the circuit-under-pad bond pads, the same variants as the LEF and GDS
+# the flow uses. 
+DEFINE tphn65lpnv2od3_sl_mt_2_9lm $TSMC65_OA_TSMCHOME/libs/tphn65lpnv2od3_sl_mt_2_9lm
+DEFINE tpbn65v_cup_9lm            $TSMC65_OA_TSMCHOME/libs/tpbn65v_cup_9lm
+
+# Other standard cell libraries
+DEFINE tcbn65lp_9lm               $TSMC65_OA_TSMCHOME/libs/tcbn65lp_9lm
+DEFINE tcbn65lpbwp7t_200a         $TSMC65_OA_TSMCHOME/libs/tcbn65lpbwp7t_200a
+DEFINE tcbn65lpbwp7t_9lm_nopwr    $TSMC65_OA_TSMCHOME/libs/tcbn65lpbwp7t_9lm_nopwr
+DEFINE tcbn65lpbwp7thvt_9lm       $TSMC65_OA_TSMCHOME/libs/tcbn65lpbwp7thvt_9lm
+DEFINE tcbn65lpbwp7tlvt_9lm       $TSMC65_OA_TSMCHOME/libs/tcbn65lpbwp7tlvt_9lm
+DEFINE tcbn65lphvt_9lm            $TSMC65_OA_TSMCHOME/libs/tcbn65lphvt_9lm
+DEFINE tcbn65lplvt_9lm            $TSMC65_OA_TSMCHOME/libs/tcbn65lplvt_9lm
+DEFINE tpan65lpnv2od3_mt_2_9lm    $TSMC65_OA_TSMCHOME/libs/tpan65lpnv2od3_mt_2_9lm
+DEFINE tphn65lpgv2od3_sl_mt_2_9lm $TSMC65_OA_TSMCHOME/libs/tphn65lpgv2od3_sl_mt_2_9lm
+DEFINE tpbn65v_fc_9lm             $TSMC65_OA_TSMCHOME/libs/tpbn65v_fc_9lm
+DEFINE tpbn65v_wb_9lm             $TSMC65_OA_TSMCHOME/libs/tpbn65v_wb_9lm
+DEFINE tsn65lpllspsramwor_BIST    $TSMC65_OA_TSMCHOME/libs/tsn65lpllspsramwor_BIST
+DEFINE tsn65lpllspsramwor_no_BIST $TSMC65_OA_TSMCHOME/libs/tsn65lpllspsramwor_no_BIST
