@@ -5,7 +5,7 @@
 
 ### Lab 0 - VLSI Environment Setup
 
-##### *Peter Cheung, v1.0 - 4 September 2026*
+##### *Peter Cheung, v1.1 - 12 September 2026*
 ---
 
 **Synopsys** is one of the main suppliers of the software used to design integrated circuits. Their tools take a design written in Verilog and turn it into the masks a foundry can manufacture. Across these labs you will use **_Fusion Compiler_**, **_VCS_**, **_Custom Compiler_**, **_TestMAX_** and **_Formality_**. You will also use tools from Siemens, mainly **_Calibre_**.
