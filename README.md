@@ -17,7 +17,6 @@ This lab puts the tools and a PDK on your `PATH`. The following labs depend on t
 **_Where to put this repository on the server_**
 
 The lab instructions assume you clone it into a suitable folder in your home directory on one of the two teaching servers - e.g. `~/Labs`, alongside the lab directories:
-
 ```
 ~/Labs/
 ├── vlsi-tooling/     <- this repository
@@ -63,6 +62,7 @@ For **Windows**: Use [MobaXterm](https://mobaxterm.mobatek.net) to create a new 
 For **Mac**: Use [XQuartz](https://www.xquartz.org). After installation and opening XQuartz, enter:
 ```bash
 ssh -Y <username>@ee-flip.ee.ic.ac.uk
+```
 
 ---
 ### Task 2 - Get the files onto your home folder on the teaching server
@@ -79,7 +79,7 @@ git clone git@github.com:ELEC70142-Digital-VLSI-Design/vlsi-tooling.git
 > If you copied the files across with `scp` rather than cloning them, the executable bit is not always preserved. Restore it with `chmod +x ~/Labs/vlsi-tooling/syn`.
 
 ---
-### Task 2 - Load the tools and a PDK
+### Task 3 - Load the tools and a PDK
 ---
 
 **_Step 1: See which PDKs are available_**
@@ -107,9 +107,9 @@ The load prints three blocks. Read them rather than scrolling past.
 
 | Block | What to look for |
 |---|---|
-| `--- tools ---` | The resolved path of each tool. `NOT ON PATH` against a tool means the install was not found, and that tool will not run. |
-| `--- kit: tsmc65LP ---` | The technology file, reference libraries and Tcl setup for the PDK. The `ref libs` line is where the shared libraries were found. |
-| `--- licences ---` | The licence servers being used. |
+| `tools` | The resolved path of each tool. `NOT ON PATH` against a tool means the install was not found, and that tool will not run. |
+| `kit: tsmc65LP` | The technology file, reference libraries and Tcl setup for the PDK. The `ref libs` line is where the shared libraries were found. |
+| `licences` | The licence servers being used. |
 
 **_Step 4: Check the environment by hand_** (optional)
 
