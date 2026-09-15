@@ -5,7 +5,7 @@
 
 ### Lab 0 - EDA Environment Setup
 
-##### *Peter Cheung, v2.0 - 14 September 2026*
+##### *Peter Cheung, v2.0 - 15 September 2026*
 ---
 
 **Synopsys** is one of the main suppliers of the software used to design integrated circuits. Their tools take a design written in SystemVerilog and turn it into the masks that a foundry can use to manufacture the silicon die. Across these labs you will use **_Fusion Compiler_**, **_VCS_**, **_Custom Compiler_**, **_TestMAX_** and **_Formality_**. You will also use tools from Siemens, mainly **_Calibre_**.  These tools are hosted on two powerful teaching servers: ee-flip and ee-flop.
@@ -14,16 +14,6 @@ A tool on its own knows nothing about the silicon fabrication process that is us
 
 This lab puts the tools and a PDK on your `PATH`. The following labs depend on this setup.
 
-**_Where to put this repository on the server_**
-
-The lab instructions assume you clone it into a suitable folder in your home directory on one of the two teaching servers - e.g. `~/Labs`, alongside the lab directories:
-```
-~/Labs/
-├── vlsi-tooling/     <- this repository
-├── Lab_1/
-├── Lab_2/
-...
-```
 ---
 ### Before you start
 ---
@@ -67,6 +57,17 @@ ssh -Y <username>@ee-flip.ee.ic.ac.uk
 ---
 ### Task 2 - Get the files onto your home folder on the teaching server
 ---
+
+**_Where to put this repository on the server_**
+
+The lab instructions assume you clone it into a suitable folder in your home directory on one of the two teaching servers - e.g. `~/Labs`, alongside the lab directories:
+```
+~/Labs/
+├── vlsi-tooling/     <- this repository
+├── Lab_1/
+├── Lab_2/
+...
+```
 
 Clone the repository into `~/Labs`:
 
