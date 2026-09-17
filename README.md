@@ -145,7 +145,7 @@ Expect:
 PASS
 ```
 
-This checks the contents rather than the exit status, because a library can exist and still be empty or missing cells. The 28 are the cells the place and route scripts ask for **by name**: the tap cell, the tie cells, the fillers, and the clock tree buffers and inverters. A missing one otherwise surfaces much later as a confusing placement or clock tree error.
+This checks the contents rather than the exit status, because a library can exist and still be empty or missing cells. The 28 are the cells the place and route scripts ask for **by name**: the tap cell, the tie cells, the fillers, and the clock tree buffers and inverters. A missing cell will otherwise surfaces much later as a confusing placement or clock tree error.
 
 If you see `FAIL`, or the check reports a library that does not exist, stop and ask for help.
 
