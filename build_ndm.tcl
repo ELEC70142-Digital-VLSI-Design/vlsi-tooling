@@ -81,16 +81,19 @@ proc build_pass {workspace output flow lef dbs} {
 # timed cells would appear in both libraries; any corner will do, all
 # three hold the same cell set.
 
+set STD_DB_SUFFIX "_ccs"
+
 set std_dbs {}
 foreach corner $CORNER_LABELS {
-    lappend std_dbs $STD_DB_DIR/${LIB_NAME}${corner}.db $corner
+    lappend std_dbs $STD_DB_DIR/${LIB_NAME}${corner}${STD_DB_SUFFIX}.db $corner
 }
 
 build_pass $LIB_NAME ${LIB_NAME}_frame_timing.ndm normal \
     $STD_LEF $std_dbs
 
 build_pass ${LIB_NAME}_po ${LIB_NAME}_physical_only.ndm physical_only \
-    $STD_LEF [list $STD_DB_DIR/${LIB_NAME}[lindex $CORNER_LABELS 0].db ""]
+    $STD_LEF [list \
+        $STD_DB_DIR/${LIB_NAME}[lindex $CORNER_LABELS 0]${STD_DB_SUFFIX}.db ""]
 
 ####################################################################
 ## IO cells and bond pads

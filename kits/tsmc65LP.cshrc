@@ -51,7 +51,8 @@ setenv TSMC65_BPAD tpbn65v
 
 setenv SYN_TECH_FILE  $TSMC65_MW/techfiles/tsmcn65_${TSMC65_STACK}.tf
 setenv SYN_STD_LEF    $TSMC65_HOME/Back_End/lef/tcbn65lpbwp7t_141a/lef/${TSMC65_STDCELL}_${TSMC65_STACK}.lef
-setenv SYN_STD_DB_DIR $TSMC65_MW/frame_only/${TSMC65_STDCELL}/LM
+# CCS (Composite Current Source) - a Synopsys format modelling the electrical behaviour of a cell
+setenv SYN_STD_DB_DIR $TSMC65_HOME/Front_End/timing_power_noise/CCS/tcbn65lpbwp7t_141a
 
 # The IO delivery splits by bond option and metal count, so mt_2/9lm
 # rather than the flat directory the standard cells use.
