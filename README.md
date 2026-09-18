@@ -74,7 +74,7 @@ Clone the repository into `~/Labs`:
 ```bash
 mkdir -p ~/Labs
 cd ~/Labs
-git clone git@github.com:ELEC70142-Digital-VLSI-Design/vlsi-tooling.git
+git clone https://github.com/ELEC70142-Digital-VLSI-Design/vlsi-tooling.git
 ```
 
 > If you copied the files across with `scp` rather than cloning them, the executable bit is not always preserved. Restore it with `chmod +x ~/Labs/vlsi-tooling/syn`.
