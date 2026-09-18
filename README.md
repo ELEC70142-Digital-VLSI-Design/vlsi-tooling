@@ -133,7 +133,7 @@ There are **five**. Two hold the standard cells, split because the fillers and t
 Check that they are readable and complete before going any further:
 
 ```bash
-fc_shell -f $SYN_TOOLS_DIR/check_ndm.tcl
+fc_shell -x "source $SYN_TOOLS_DIR/check_ndm.tcl"
 ```
 
 Expect:
