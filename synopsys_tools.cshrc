@@ -28,7 +28,7 @@ endif
 
 # --- Licences -------------------------------------------------------
 # SITE: Imperial EEE licence servers.
-setenv SNPSLMD_LICENSE_FILE 27020@ee-llic01.ee.ic.ac.uk:27020@ee-cas-licenses.ee.ic.ac.uk:7182@ee-fs1.ee.ic.ac.uk
+setenv SNPSLMD_LICENSE_FILE 7182@ee-llic02.ee.ic.ac.uk
 
 # Verdi/Novas falls back to the generic FlexLM variable. Append so
 # another vendor's servers are not clobbered.

@@ -168,7 +168,7 @@ setenv SYN_MEMCOMP_DIR  $TSMC65_TSMCHOME/sram/Compiler
 setenv SYN_MEMCOMP_DOCS $TSMC65_TSMCHOME/sram/Documentation/documents
 
 # SITE: MC2 licence. Same machine cshrc.mc2 names by short hostname.
-setenv SYN_MEMCOMP_LICENSE 7007@ee-llic01.ee.ic.ac.uk
+setenv SYN_MEMCOMP_LICENSE 7182@ee-llic02.ee.ic.ac.uk
 
 # --- GDS stream out --------------------------------------------------
 # The map belongs to the metal stack: 9lmT2 is 6X2Z, the same code the
